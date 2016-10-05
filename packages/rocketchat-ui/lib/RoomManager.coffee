@@ -51,6 +51,7 @@ Tracker.autorun ->
 @RoomManager = new class
 	openedRooms = {}
 	msgStream = new Meteor.Streamer 'room-messages'
+	modStream = new Meteor.Streamer 'moderator-room-messages'
 	onlineUsers = new ReactiveVar {}
 
 	Dep = new Tracker.Dependency
@@ -63,6 +64,7 @@ Tracker.autorun ->
 
 			if openedRooms[typeName].rid?
 				msgStream.removeAllListeners openedRooms[typeName].rid
+				modStream.removeAllListeners openedRooms[typeName].rid
 				RocketChat.Notifications.unRoom openedRooms[typeName].rid, 'deleteMessage', onDeleteMessageStream
 
 			openedRooms[typeName].ready = false
@@ -114,8 +116,7 @@ Tracker.autorun ->
 
 						if openedRooms[typeName].streamActive isnt true
 							openedRooms[typeName].streamActive = true
-							msgStream.on openedRooms[typeName].rid, (msg) ->
-
+							onFunc = (msg) ->
 								RocketChat.promises.run('onClientMessageReceived', msg).then (msg) ->
 
 									# Should not send message to room if room has not loaded all the current messages
@@ -131,7 +132,10 @@ Tracker.autorun ->
 
 										RocketChat.callbacks.run 'streamMessage', msg
 
-										window.fireGlobalEvent('new-message', msg);
+										window.fireGlobalEvent('new-message', msg)
+
+							msgStream.on openedRooms[typeName].rid, onFunc
+							modStream.on openedRooms[typeName].rid, onFunc
 
 							RocketChat.Notifications.onRoom openedRooms[typeName].rid, 'deleteMessage', onDeleteMessageStream
 
@@ -242,6 +246,7 @@ Tracker.autorun ->
 	getDomOfRoom: getDomOfRoom
 	existsDomOfRoom: existsDomOfRoom
 	msgStream: msgStream
+	modStream: modStream
 	openedRooms: openedRooms
 	updateUserStatus: updateUserStatus
 	onlineUsers: onlineUsers

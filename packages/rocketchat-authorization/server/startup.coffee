@@ -34,6 +34,7 @@ Meteor.startup ->
 		{ _id: 'manage-own-integrations',       roles : ['admin', 'bot'] }
 		{ _id: 'manage-oauth-apps',             roles : ['admin'] }
 		{ _id: 'mention-all',                   roles : ['admin', 'owner', 'moderator', 'user'] }
+		{ _id: 'message-approval',              roles : ['admin', 'owner', 'moderator'] }
 		{ _id: 'mute-user',                     roles : ['admin', 'owner', 'moderator'] }
 		{ _id: 'remove-user',                   roles : ['admin', 'owner', 'moderator'] }
 		{ _id: 'run-import',                    roles : ['admin'] }

@@ -11,12 +11,15 @@
 					Notification.permission = status
 
 	notify: (notification) ->
+
+
 		if window.Notification && Notification.permission == "granted"
 			message = { rid: notification.payload?.rid, msg: notification.text, notification: true }
 			RocketChat.promises.run('onClientMessageReceived', message).then (message) ->
+				cleaned = _.stripTags(message.msg).replace(RegExp.messageReference, "")
 				n = new Notification notification.title,
 					icon: notification.icon or getAvatarUrlFromUsername notification.payload.sender.username
-					body: _.stripTags(message.msg)
+					body: cleaned
 					tag: notification.payload._id,
 					silent: true
 

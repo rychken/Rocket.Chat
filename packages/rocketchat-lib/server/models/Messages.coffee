@@ -140,6 +140,40 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 			username: me.username
 		delete record._id
 		return @insert record
+	
+	findVisibleAcceptedByRoomId: (roomId, options) ->
+		query =
+			_hidden:
+				$ne: true
+			needsApproval:
+				$ne: true
+			rid: roomId
+
+		return @find query, options
+
+	findVisibleAcceptedByRoomIdBeforeTimestamp: (roomId, timestamp, options) ->
+		query =
+			_hidden:
+				$ne: true
+			needsApproval:
+				$ne: true
+			rid: roomId
+			ts:
+				$lt: timestamp
+
+		return @find query, options
+
+	findVisibleAcceptedByRoomIdAfterTimestamp: (roomId, timestamp, options) ->
+		query =
+			_hidden:
+				$ne: true
+			needsApproval:
+				$ne: true
+			rid: roomId
+			ts:
+				$gt: timestamp
+
+		return @find query, options
 
 	# UPDATE
 	setHiddenById: (_id, hidden=true) ->
@@ -259,6 +293,15 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		return @update query, update
 
+	accept: (_id) ->
+		query =
+			_id: _id
+
+		update =
+			$unset:
+				needsApproval: ""
+
+		return @update query, update
 
 	# INSERT
 	createWithTypeRoomIdMessageAndUser: (type, roomId, message, user, extraData) ->

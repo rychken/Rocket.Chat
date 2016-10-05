@@ -39,12 +39,14 @@ Template.message.helpers
 	editTime: ->
 		if Template.instance().wasEdited
 			return moment(@editedAt).format(RocketChat.settings.get('Message_DateFormat') + ' ' + RocketChat.settings.get('Message_TimeFormat'))
+
 	editedBy: ->
 		return "" unless Template.instance().wasEdited
 		# try to return the username of the editor,
 		# otherwise a special "?" character that will be
 		# rendered as a special avatar
 		return @editedBy?.username or "?"
+
 	canEdit: ->
 		hasPermission = RocketChat.authz.hasAtLeastOnePermission('edit-message', this.rid)
 		isEditAllowed = RocketChat.settings.get 'Message_AllowEditing'
@@ -77,6 +79,7 @@ Template.message.helpers
 
 	showEditedStatus: ->
 		return RocketChat.settings.get 'Message_ShowEditedStatus'
+
 	label: ->
 		if @i18nLabel
 			return t(@i18nLabel)
@@ -126,7 +129,6 @@ Template.message.helpers
 	hideReactions: ->
 		return 'hidden' if _.isEmpty(@reactions)
 
-
 	actionLinks: ->
 		# remove 'method_id' and 'params' properties
 		return _.map(@actionLinks, (actionLink, key) -> _.extend({ id: key }, _.omit(actionLink, 'method_id', 'params')))
@@ -145,6 +147,10 @@ Template.message.helpers
 	hideUsernames: ->
 		prefs = Meteor.user()?.settings?.preferences
 		return if prefs?.hideUsernames
+		
+	approvalRequired: ->
+		room = RocketChat.models.Rooms.findOne({ _id: this.rid })
+		return room.approvalRequired and this.needsApproval
 
 Template.message.onCreated ->
 	msg = Template.currentData()

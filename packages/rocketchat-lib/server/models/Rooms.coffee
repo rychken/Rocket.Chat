@@ -46,14 +46,14 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 
 		return @findOne query, options
 
-	findOneByIdContainigUsername: (_id, username, options) ->
+	findOneByIdContainingUsername: (_id, username, options) ->
 		query =
 			_id: _id
 			usernames: username
 
 		return @findOne query, options
 
-	findOneByNameAndTypeNotContainigUsername: (name, type, username, options) ->
+	findOneByNameAndTypeNotContainingUsername: (name, type, username, options) ->
 		query =
 			name: name
 			t: type
@@ -182,14 +182,14 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 
 		return @find query, options
 
-	findByTypeContainigUsername: (type, username, options) ->
+	findByTypeContainingUsername: (type, username, options) ->
 		query =
 			t: type
 			usernames: username
 
 		return @find query, options
 
-	findByTypeContainigUsernames: (type, username, options) ->
+	findByTypeContainingUsernames: (type, username, options) ->
 		query =
 			t: type
 			usernames: { $all: [].concat(username) }
@@ -206,7 +206,7 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 
 		return @find query, options
 
-	findByContainigUsername: (username, options) ->
+	findByContainingUsername: (username, options) ->
 		query =
 			usernames: username
 
@@ -492,6 +492,24 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 			update.$unset = unsetData
 
 		return @update { _id: _id }, update
+
+	setApprovalRequiredById: (_id) ->
+		query =
+			_id: _id
+
+		update =
+			$set: { approvalRequired: true }
+
+		return @update query, update
+
+	setNoApprovalRequiredById: (_id) ->
+		query =
+			_id: _id
+
+		update =
+			$set: { approvalRequired: false }
+
+		return @update query, update
 
 	# INSERT
 	createWithTypeNameUserAndUsernames: (type, name, user, usernames, extraData) ->

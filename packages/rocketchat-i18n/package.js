@@ -10,7 +10,7 @@ Package.onUse(function(api) {
 
 	var fs = Npm.require('fs');
 	fs.readdirSync('packages/rocketchat-i18n/i18n').forEach(function(filename) {
-		if (filename.indexOf('.json') > -1 && fs.statSync('packages/rocketchat-i18n/i18n/' + filename).size > 16) {
+		if (filename.endsWith('.json') && fs.statSync('packages/rocketchat-i18n/i18n/' + filename).size > 16) {
 			api.addFiles('i18n/' + filename);
 		}
 	});

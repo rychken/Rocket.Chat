@@ -265,6 +265,11 @@ class @ChatMessages
 		Meteor.call 'unpinMessage', message, (error, result) ->
 			if error
 				return handleError(error)
+	
+	acceptMsg: (message) ->
+		Meteor.call 'acceptMessage', message, (error, result) ->
+			if error
+				return handleError(error)
 
 	update: (id, rid, msg) ->
 		if _.trim(msg) isnt ''

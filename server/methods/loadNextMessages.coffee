@@ -14,6 +14,7 @@ Meteor.methods
 			return false
 
 		options =
+			needsApproval: {$ne: true}
 			sort:
 				ts: 1
 			limit: limit
@@ -22,9 +23,15 @@ Meteor.methods
 			options.fields = { 'editedAt': 0 }
 
 		if end?
-			records = RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, end, options).fetch()
+			if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', rid)
+				records = RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, end, options).fetch()
+			else
+				records = RocketChat.models.Messages.findVisibleAcceptedByRoomIdAfterTimestamp(rid, end, options).fetch()
 		else
-			records = RocketChat.models.Messages.findVisibleByRoomId(rid, options).fetch()
+			if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', rid)
+				records = RocketChat.models.Messages.findVisibleByRoomId(rid, options).fetch()
+			else
+				records = RocketChat.models.Messages.findVisibleAcceptedByRoomId(rid, options).fetch()
 
 		messages = _.map records, (message) ->
 			message.starred = _.findWhere message.starred, { _id: fromId }

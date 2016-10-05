@@ -16,7 +16,7 @@ RocketChat.sendMessage = (user, message, room, upsert = false) ->
 		room = RocketChat.models.Rooms.findOneById(room._id)
 
 	if message.parseUrls isnt false
-		if urls = message.msg.match /([A-Za-z]{3,9}):\/\/([-;:&=\+\$,\w]+@{1})?([-A-Za-z0-9\.]+)+:?(\d+)?((\/[-\+=!:~%\/\.@\,\w]*)?\??([-\+=&!:;%@\/\.\,\w]+)?(?:#([^\s\)]+))?)?/g
+		if urls = message.msg.match RegExp.urls
 			message.urls = urls.map (url) -> url: url
 
 	message = RocketChat.callbacks.run 'beforeSaveMessage', message

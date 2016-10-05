@@ -18,4 +18,7 @@ Meteor.methods
 		if not RocketChat.settings.get 'Message_ShowEditedStatus'
 			options.fields = { 'editedAt': 0 }
 
-		return RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, start, options).fetch()
+		if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', rid)
+			return RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, start, options).fetch()
+		else
+			return RocketChat.models.Messages.findVisibleAcceptedByRoomIdAfterTimestamp(rid, start, options).fetch()

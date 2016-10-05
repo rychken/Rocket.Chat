@@ -1,23 +1,33 @@
 @msgStream = new Meteor.Streamer 'room-messages'
+@modStream = new Meteor.Streamer 'moderator-room-messages'
 
-msgStream.allowWrite('none')
+msgStream.allowWrite 'none'
+modStream.allowWrite 'none'
 
-msgStream.allowRead (eventName) ->
-	try
-		room = Meteor.call 'canAccessRoom', eventName, this.userId
-		if not room
+getAllowReadFunc = (streamType) ->
+	return (eventName) ->
+		try
+			room = Meteor.call 'canAccessRoom', eventName, this.userId
+			if not room
+				return false
+
+			if room.t is 'c' and not RocketChat.authz.hasPermission(this.userId, 'preview-c-room') and room.usernames.indexOf(room.username) is -1
+				return false
+
+			if streamType == 'mod' and not RocketChat.authz.hasPermission this.userId, 'message-approval', room._id
+				return false
+
+			return true
+		catch e
 			return false
 
-		if room.t is 'c' and not RocketChat.authz.hasPermission(this.userId, 'preview-c-room') and room.usernames.indexOf(room.username) is -1
-			return false
+msgStream.allowRead getAllowReadFunc('msg')
+modStream.allowRead getAllowReadFunc('mod')
 
-		return true
-	catch e
-		return false
+msgStream.allowRead '__my_messages__', 'all'
+modStream.allowRead '__my_messages__', 'all'
 
-msgStream.allowRead('__my_messages__', 'all')
-
-msgStream.allowEmit '__my_messages__', (eventName, msg, options) ->
+allowEmitFunc = (eventName, msg, options) ->
 	try
 		room = Meteor.call 'canAccessRoom', msg.rid, this.userId
 		if not room
@@ -30,6 +40,8 @@ msgStream.allowEmit '__my_messages__', (eventName, msg, options) ->
 	catch e
 		return false
 
+msgStream.allowEmit '__my_messages__', allowEmitFunc
+modStream.allowEmit '__my_messages__', allowEmitFunc
 
 Meteor.startup ->
 	fields = undefined
@@ -42,5 +54,9 @@ Meteor.startup ->
 
 		for record in records
 			if record._hidden isnt true and not record.imported?
-				msgStream.emit '__my_messages__', record, {}
-				msgStream.emit record.rid, record
+				if record.needsApproval
+					modStream.emit '__my_messages__', record, {}
+					modStream.emit record.rid, record
+				else
+					msgStream.emit '__my_messages__', record, {}
+					msgStream.emit record.rid, record

@@ -23,7 +23,7 @@ Api.addRoute 'publicRooms', authRequired: true,
 ###
 Api.addRoute 'joinedRooms', authRequired: true,
 	get: ->
-		rooms = RocketChat.models.Rooms.findByContainigUsername(@user.username).fetch()
+		rooms = RocketChat.models.Rooms.findByContainingUsername(@user.username).fetch()
 		status: 'success', rooms: rooms
 
 # join a room

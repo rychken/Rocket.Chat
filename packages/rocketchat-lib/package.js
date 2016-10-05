@@ -60,25 +60,29 @@ Package.onUse(function(api) {
 	api.addFiles('server/lib/RateLimiter.coffee', 'server');
 
 	// SERVER FUNCTIONS
+	api.addFiles('server/functions/acceptMessage.coffee', 'server');
 	api.addFiles('server/functions/addUserToDefaultChannels.js', 'server');
 	api.addFiles('server/functions/addUserToRoom.js', 'server');
 	api.addFiles('server/functions/archiveRoom.js', 'server');
-	api.addFiles('server/functions/checkUsernameAvailability.coffee', 'server');
 	api.addFiles('server/functions/checkEmailAvailability.js', 'server');
+	api.addFiles('server/functions/checkUsernameAvailability.coffee', 'server');
 	api.addFiles('server/functions/createRoom.js', 'server');
 	api.addFiles('server/functions/deleteMessage.js', 'server');
 	api.addFiles('server/functions/deleteUser.js', 'server');
+	api.addFiles('server/functions/isApprovalRequired.coffee', 'server');
+	api.addFiles('server/functions/Notifications.coffee', 'server');
 	api.addFiles('server/functions/removeUserFromRoom.js', 'server');
-	api.addFiles('server/functions/saveUser.js', 'server');
 	api.addFiles('server/functions/saveCustomFields.js', 'server');
+	api.addFiles('server/functions/saveUser.js', 'server');
 	api.addFiles('server/functions/sendMessage.coffee', 'server');
+	api.addFiles('server/functions/setApprovalRequired.js', 'server');
+	api.addFiles('server/functions/setEmail.js', 'server');
+	api.addFiles('server/functions/setNoApprovalRequired.js', 'server');
 	api.addFiles('server/functions/settings.coffee', 'server');
 	api.addFiles('server/functions/setUserAvatar.js', 'server');
 	api.addFiles('server/functions/setUsername.coffee', 'server');
-	api.addFiles('server/functions/setEmail.js', 'server');
 	api.addFiles('server/functions/unarchiveRoom.js', 'server');
-	api.addFiles('server/functions/updateMessage.js', 'server');
-	api.addFiles('server/functions/Notifications.coffee', 'server');
+	api.addFiles('server/functions/updateMessage.coffee', 'server');
 
 	// SERVER LIB
 	api.addFiles('server/lib/defaultBlockedDomainsList.js', 'server');
@@ -102,6 +106,7 @@ Package.onUse(function(api) {
 	api.addFiles('server/publications/settings.coffee', 'server');
 
 	// SERVER METHODS
+	api.addFiles('server/methods/acceptMessage.coffee', 'server');
 	api.addFiles('server/methods/addOAuthService.coffee', 'server');
 	api.addFiles('server/methods/addUserToRoom.coffee', 'server');
 	api.addFiles('server/methods/archiveRoom.coffee', 'server');
@@ -110,27 +115,29 @@ Package.onUse(function(api) {
 	api.addFiles('server/methods/createPrivateGroup.coffee', 'server');
 	api.addFiles('server/methods/deleteMessage.coffee', 'server');
 	api.addFiles('server/methods/deleteUserOwnAccount.js', 'server');
+	api.addFiles('server/methods/filterATAllTag.js', 'server');
+	api.addFiles('server/methods/filterBadWords.js', ['server']);
 	api.addFiles('server/methods/getRoomRoles.js', 'server');
 	api.addFiles('server/methods/getUserRoles.js', 'server');
-	api.addFiles('server/methods/joinRoom.coffee', 'server');
+	api.addFiles('server/methods/insertOrUpdateUser.coffee', 'server');
 	api.addFiles('server/methods/joinDefaultChannels.coffee', 'server');
+	api.addFiles('server/methods/joinRoom.coffee', 'server');
 	api.addFiles('server/methods/leaveRoom.coffee', 'server');
 	api.addFiles('server/methods/removeOAuthService.coffee', 'server');
+	api.addFiles('server/methods/restartServer.coffee', 'server');
 	api.addFiles('server/methods/robotMethods.coffee', 'server');
 	api.addFiles('server/methods/saveSetting.js', 'server');
 	api.addFiles('server/methods/sendInvitationEmail.coffee', 'server');
 	api.addFiles('server/methods/sendMessage.coffee', 'server');
 	api.addFiles('server/methods/sendSMTPTestEmail.coffee', 'server');
 	api.addFiles('server/methods/setAdminStatus.coffee', 'server');
+	api.addFiles('server/methods/setApprovalRequired.coffee', 'server');
+	api.addFiles('server/methods/setEmail.js', 'server');
+	api.addFiles('server/methods/setNoApprovalRequired.coffee', 'server');
 	api.addFiles('server/methods/setRealName.coffee', 'server');
 	api.addFiles('server/methods/setUsername.coffee', 'server');
-	api.addFiles('server/methods/insertOrUpdateUser.coffee', 'server');
-	api.addFiles('server/methods/setEmail.js', 'server');
-	api.addFiles('server/methods/restartServer.coffee', 'server');
 	api.addFiles('server/methods/unarchiveRoom.coffee', 'server');
 	api.addFiles('server/methods/updateMessage.coffee', 'server');
-	api.addFiles('server/methods/filterBadWords.js', ['server']);
-	api.addFiles('server/methods/filterATAllTag.js', 'server');
 
 	// SERVER STARTUP
 	api.addFiles('server/startup/settingsOnLoadCdnPrefix.coffee', 'server');

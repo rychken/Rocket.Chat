@@ -12,7 +12,7 @@ Meteor.methods
 		unless message._id
 			return false
 
-		message = RocketChat.models.Messages.findOneById(message._id);
+		message = RocketChat.models.Messages.findOneById(message._id)
 
 		unless message?.rid
 			return false
@@ -23,6 +23,7 @@ Meteor.methods
 		limit = limit - 1
 
 		options =
+			needsApproval: {$ne: true}
 			sort:
 				ts: -1
 			limit: Math.ceil(limit/2)
@@ -30,7 +31,11 @@ Meteor.methods
 		if not RocketChat.settings.get 'Message_ShowEditedStatus'
 			options.fields = { 'editedAt': 0 }
 
-		records = RocketChat.models.Messages.findVisibleByRoomIdBeforeTimestamp(message.rid, message.ts, options).fetch()
+		if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', message.rid)
+			records = RocketChat.models.Messages.findVisibleByRoomIdBeforeTimestamp(message.rid, message.ts, options).fetch()
+		else
+			records = RocketChat.models.Messages.findVisibleAcceptedByRoomIdBeforeTimestamp(message.rid, message.ts, options).fetch()
+
 		messages = _.map records, (message) ->
 			message.starred = _.findWhere message.starred, { _id: fromId }
 			return message

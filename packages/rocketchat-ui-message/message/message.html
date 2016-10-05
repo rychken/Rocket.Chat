@@ -51,6 +51,9 @@
 			</div>
 		</span>
 		<div class="body" dir="auto">
+			{{#if approvalRequired}}
+			<span class="unapproved" title="Unapproved">{{_ "Unapproved"}}</span>
+			{{/if}}
 			{{{body}}}
 			{{#if hasOembed}}
 				{{#each urls}}

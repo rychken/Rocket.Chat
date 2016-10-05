@@ -77,6 +77,29 @@ Meteor.startup ->
 		target = $(event.target)
 		if !target.closest('.message-cog-container').length and !target.is('.message-cog-container')
 			RocketChat.MessageAction.hideDropDown()
+	
+	order = 1
+
+	RocketChat.MessageAction.addButton
+		id: 'accept-message'
+		icon: 'icon-ok'
+		i18nLabel: 'Accept'
+		context: [
+			'message'
+			'message-mobile'
+		]
+		action: (event, instance) ->
+			message = @_arguments[1]
+			Meteor.call 'acceptMessage', message._id
+			RocketChat.MessageAction.hideDropDown()
+		validation: (message) ->
+			return unless message.needsApproval and RocketChat.authz.hasAtLeastOnePermission('message-approval', message.rid)
+
+			room = RocketChat.models.Rooms.findOne({ _id: message.rid })
+			return if Array.isArray(room.usernames) and room.usernames.indexOf(Meteor.user().username) is -1
+
+			return true
+		order: order++
 
 	RocketChat.MessageAction.addButton
 		id: 'reply-message'
@@ -100,7 +123,7 @@ Meteor.startup ->
 			if not RocketChat.models.Subscriptions.findOne({ rid: message.rid })?
 				return false
 			return true
-		order: 1
+		order: order++
 
 	RocketChat.MessageAction.addButton
 		id: 'edit-message'
@@ -136,7 +159,7 @@ Meteor.startup ->
 				return currentTsDiff < blockEditInMinutes
 			else
 				return true
-		order: 2
+		order: order++
 
 	RocketChat.MessageAction.addButton
 		id: 'delete-message'
@@ -167,7 +190,7 @@ Meteor.startup ->
 				return currentTsDiff < blockDeleteInMinutes
 			else
 				return true
-		order: 3
+		order: order++
 
 	RocketChat.MessageAction.addButton
 		id: 'permalink'
@@ -188,7 +211,7 @@ Meteor.startup ->
 				return false
 
 			return true
-		order: 4
+		order: order++
 
 	RocketChat.MessageAction.addButton
 		id: 'copy'
@@ -209,7 +232,7 @@ Meteor.startup ->
 				return false
 
 			return true
-		order: 5
+		order: order++
 
 	RocketChat.MessageAction.addButton
 		id: 'quote-message'
@@ -234,4 +257,4 @@ Meteor.startup ->
 				return false
 
 			return true
-		order: 6
+		order: order++

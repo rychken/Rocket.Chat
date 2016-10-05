@@ -191,6 +191,23 @@ Template.channelSettings.onCreated ->
 					toastr.success TAPi18n.__ 'Room_code_changed_successfully'
 					RocketChat.callbacks.run 'roomCodeChanged', room
 
+		approvalRequired:
+			type: 'boolean'
+			label: 'Message Approval'
+			canView: (room) => room.t isnt 'd'
+			canEdit: (room) => RocketChat.authz.hasAllPermission('message-approval', room._id)
+			save: (value, room) =>
+				if value is true
+					Meteor.call 'setApprovalRequired', room._id, (err, results) ->
+						return handleError err if err
+						toastr.success TAPi18n.__ 'Approval_required'
+						RocketChat.callbacks.run 'setApprovalRequired', room
+				else
+					Meteor.call 'setNoApprovalRequired', room._id, (err, results) ->
+						return handleError err if err
+						toastr.success TAPi18n.__ 'Approval_not_required'
+						RocketChat.callbacks.run 'setNoApprovalRequired', room
+
 
 	@saveSetting = =>
 		room = ChatRoom.findOne @data?.rid
