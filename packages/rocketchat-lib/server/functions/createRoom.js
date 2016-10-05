@@ -1,5 +1,5 @@
 /* globals RocketChat */
-RocketChat.createRoom = function(type, name, owner, members, readOnly) {
+RocketChat.createRoom = function(type, name, owner, members, readOnly, approvalRequired) {
 	name = s.trim(name);
 	owner = s.trim(owner);
 	members = [].concat(members);
@@ -45,6 +45,7 @@ RocketChat.createRoom = function(type, name, owner, members, readOnly) {
 			name: name,
 			ts: now,
 			ro: readOnly === true,
+			approvalRequired: approvalRequired === true,
 			sysMes: readOnly !== true,
 			usernames: members,
 			u: {
@@ -57,6 +58,7 @@ RocketChat.createRoom = function(type, name, owner, members, readOnly) {
 	room = RocketChat.models.Rooms.createWithTypeNameUserAndUsernames(type, name, owner.username, members, {
 		ts: now,
 		ro: readOnly === true,
+		approvalRequired: approvalRequired === true,
 		sysMes: readOnly !== true
 	});
 

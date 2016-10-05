@@ -90,11 +90,12 @@ Template.createCombinedFlex.events
 		name = instance.find('#channel-name').value.toLowerCase().trim()
 		privateGroup = instance.find('#channel-type').checked
 		readOnly = instance.find('#channel-ro').checked
+		approvalRequired = instance.find('#channel-approval-required').checked
 		createRoute = if privateGroup then 'createPrivateGroup' else 'createChannel'
 		successRoute = if privateGroup then 'group' else 'channel'
 		instance.roomName.set name
 		if not err
-			Meteor.call createRoute, name, instance.selectedUsers.get(), readOnly, (err, result) ->
+			Meteor.call createRoute, name, instance.selectedUsers.get(), readOnly, approvalRequired, (err, result) ->
 				if err
 					console.log err
 					if err.error is 'error-invalid-name'

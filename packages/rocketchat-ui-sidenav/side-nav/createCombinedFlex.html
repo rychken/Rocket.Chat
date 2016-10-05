@@ -20,6 +20,10 @@
 				<input type="checkbox" id="channel-ro">
 			</div>
 			<div class="input-line">
+				<label for="channel-approval-required">{{_ "Message_Approval"}}</label>
+				<input type="checkbox" id="channel-approval-required">
+			</div>
+			<div class="input-line">
 				<label for="channel-members">{{_ "Select_users"}}</label>
 				{{> inputAutocomplete settings=autocompleteSettings id="channel-members" class="search" placeholder=(_ "Search_by_username") autocomplete="off"}}
 				<ul class="selected-users">

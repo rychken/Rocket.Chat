@@ -1,5 +1,5 @@
 Meteor.methods
-	createChannel: (name, members, readOnly) ->
+	createChannel: (name, members, readOnly, approvalRequired) ->
 
 		check name, String
 		check members, Match.Optional([String])
@@ -10,4 +10,4 @@ Meteor.methods
 		if RocketChat.authz.hasPermission(Meteor.userId(), 'create-c') isnt true
 			throw new Meteor.Error 'error-not-allowed', "Not allowed", { method: 'createChannel' }
 
-		return RocketChat.createRoom('c', name, Meteor.user()?.username, members, readOnly);
+		return RocketChat.createRoom('c', name, Meteor.user()?.username, members, readOnly, approvalRequired)
