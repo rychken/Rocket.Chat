@@ -24,7 +24,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 		return -1;
 	};
 
-	var settings, desktopMentionIds, i, j, len, len1, highlights, mentionIds, highlightsIds, usersWithHighlights, mobileMentionIds, ref, ref1, toAll, userIdsToNotify, userIdsToPushNotify, userOfMention, userOfMentionId, usersOfDesktopMentions, usersOfMentionId, usersOfMentionItem, usersOfMobileMentions;
+	var settings, desktopMentionIds, i, j, len, len1, highlights, mentionIds, highlightsIds, usersWithHighlights, mobileMentionIds, ref, ref1, toAll, userIdsToNotify, userIdsToPushNotify, userOfMention, userOfMentionId, usersOfDesktopMentions, usersOfMentionId, usersOfMentionItem, usersOfMobileMentions, userIdsToIgnore;
 
 	/**
 	 * Checks if a given user can be notified
@@ -89,6 +89,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 
 	userIdsToNotify = [];
 	userIdsToPushNotify = [];
+	userIdsToIgnore = [message.u._id];
 	usersWithHighlights = [];
 	highlights = RocketChat.models.Users.findUsersByUsernamesWithHighlights(room.usernames, { fields: { '_id': 1, 'settings.preferences.highlights': 1 }}).fetch();
 
@@ -97,6 +98,17 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 			usersWithHighlights.push(user);
 		}
 	});
+
+	// Build user ids not allowed to see unapproved messages
+	if (room.approvalRequired && !RocketChat.authz.hasPermission(message.u._id, 'message-approval', room._id)) {
+		let room_user;
+		room.usernames.forEach(function(username) {
+			room_user = RocketChat.models.Users.findOneByUsername(username);
+			if (room_user && !RocketChat.authz.hasPermission(room_user._id, 'message-approval', room._id)) {
+				userIdsToIgnore.push(room_user._id);
+			}
+		});
+	}
 
 	let push_message;
 	//Set variables depending on Push Notification settings
@@ -133,6 +145,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 				'@' + user.username + ': ' + message.msg, 'privateMessage');
 
 		}
+
 		if ((userOfMention != null) && canBeNotified(userOfMentionId, 'mobile')) {
 			RocketChat.Notifications.notifyUser(userOfMention._id, 'notification', {
 				title: '@' + user.username,
@@ -280,8 +293,8 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 			userIdsToPushNotify = userIdsToPushNotify.concat(highlightsIds);
 		}
 
-		userIdsToNotify = _.without(_.compact(_.unique(userIdsToNotify)), message.u._id);
-		userIdsToPushNotify = _.without(_.compact(_.unique(userIdsToPushNotify)), message.u._id);
+		userIdsToNotify = _.difference(_.compact(_.unique(userIdsToNotify)), userIdsToIgnore);
+		userIdsToPushNotify = _.difference(_.compact(_.unique(userIdsToPushNotify)), userIdsToIgnore);
 
 		if (userIdsToNotify.length > 0) {
 			for (j = 0, len1 = userIdsToNotify.length; j < len1; j++) {
