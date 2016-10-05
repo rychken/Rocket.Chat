@@ -236,11 +236,11 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
-	incUnreadForRoomIdExcludingUserId: (roomId, userId, inc=1) ->
+	incUnreadForRoomIdExcludingUserIds: (roomId, userIds, inc=1) ->
 		query =
 			rid: roomId
 			'u._id':
-				$ne: userId
+				$nin: userIds
 
 		update =
 			$set:
@@ -266,11 +266,11 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
-	setAlertForRoomIdExcludingUserId: (roomId, userId) ->
+	setAlertForRoomIdExcludingUserIds: (roomId, userIds) ->
 		query =
 			rid: roomId
 			'u._id':
-				$ne: userId
+				$nin: userIds
 			$or: [
 				{ alert: { $ne: true } }
 				{ open: { $ne: true } }

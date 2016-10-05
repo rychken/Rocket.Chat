@@ -35,11 +35,12 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 		// Update the other subscriptions
 		RocketChat.models.Subscriptions.incUnreadOfDirectForRoomIdExcludingUserId(message.rid, message.u._id, 1);
 	} else {
-		var mentionIds, toAll, highlightsIds, highlights;
+		var mentionIds, toAll, highlightsIds, highlights, ignoreUserIds;
 
 		mentionIds = [];
 		highlightsIds = [];
 		toAll = false;
+		ignoreUserIds = [];
 		highlights = RocketChat.models.Users.findUsersByUsernamesWithHighlights(room.usernames, { fields: { '_id': 1, 'settings.preferences.highlights': 1 }}).fetch();
 
 		if (message.mentions != null) {
@@ -47,7 +48,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 				if (!toAll && mention._id === 'all') {
 					toAll = true;
 				}
-				if (mention._id !== message.u._id) {
+				else if (mention._id !== message.u._id && (!room.approvalRequired || RocketChat.authz.hasPermission(mention._id, 'message-approval', room._id))) {
 					mentionIds.push(mention._id);
 				}
 			});
@@ -55,25 +56,35 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 
 		highlights.forEach(function(user) {
 			if (user && user.settings && user.settings.preferences && messageContainsHighlight(message, user.settings.preferences.highlights)) {
-				if (user._id !== message.u._id) {
+				if (user._id !== message.u._id && (!room.approvalRequired || RocketChat.authz.hasPermission(user._id, 'message-approval', room._id))) {
 					highlightsIds.push(user._id);
 				}
 			}
 		});
 
+		if (room.approvalRequired && !RocketChat.authz.hasPermission(message.u._id, 'message-approval', room._id)) {
+			RocketChat.models.Users.findUsersByUsernames(room.usernames).forEach(function(user) {
+				if (!RocketChat.authz.hasPermission(user._id, 'message-approval', room._id)) {
+					ignoreUserIds.push(user._id);
+				}
+			});
+		}
+
+		ignoreUserIds.push(message.u._id);
+
 		if (toAll) {
-			RocketChat.models.Subscriptions.incUnreadForRoomIdExcludingUserId(room._id, message.u._id);
+			RocketChat.models.Subscriptions.incUnreadForRoomIdExcludingUserIds(room._id, ignoreUserIds);
 		} else if ((mentionIds && mentionIds.length > 0) || (highlightsIds && highlightsIds.length > 0)) {
-			RocketChat.models.Subscriptions.incUnreadForRoomIdAndUserIds(room._id, _.compact(_.unique(mentionIds.concat(highlightsIds))));
+			RocketChat.models.Subscriptions.incUnreadForRoomIdAndUserIds(room._id, _.compact(_.without(_.unique(mentionIds.concat(highlightsIds)), ignoreUserIds)));
 		}
 	}
 
 	// Update all the room activity tracker fields
 	RocketChat.models.Rooms.incMsgCountAndSetLastMessageTimestampById(message.rid, 1, message.ts);
 
-	// Update all other subscriptions to alert their owners but witout incrementing
+	// Update all other subscriptions to alert their owners but without incrementing
 	// the unread counter, as it is only for mentions and direct messages
-	RocketChat.models.Subscriptions.setAlertForRoomIdExcludingUserId(message.rid, message.u._id);
+	RocketChat.models.Subscriptions.setAlertForRoomIdExcludingUserIds(message.rid, ignoreUserIds);
 
 	return message;
 
