@@ -8,13 +8,12 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'error-invalid-user', 'Invalid user', { method: 'loadNextMessages' }
 
-		fromId = Meteor.userId()
+		viewerId = Meteor.userId()
 
-		unless Meteor.call 'canAccessRoom', rid, fromId
+		unless Meteor.call 'canAccessRoom', rid, viewerId
 			return false
 
 		options =
-			needsApproval: {$ne: true}
 			sort:
 				ts: 1
 			limit: limit
@@ -23,20 +22,20 @@ Meteor.methods
 			options.fields = { 'editedAt': 0 }
 
 		if end?
-			if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', rid)
-				records = RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, end, options).fetch()
-			else
-				records = RocketChat.models.Messages.findVisibleAcceptedByRoomIdAfterTimestamp(rid, end, options).fetch()
+			records = RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, end, options).fetch()
 		else
-			if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', rid)
-				records = RocketChat.models.Messages.findVisibleByRoomId(rid, options).fetch()
-			else
-				records = RocketChat.models.Messages.findVisibleAcceptedByRoomId(rid, options).fetch()
+			records = RocketChat.models.Messages.findVisibleByRoomId(rid, options).fetch()
 
-		messages = _.map records, (message) ->
-			message.starred = _.findWhere message.starred, { _id: fromId }
+		more = records.length is options.limit
+
+		messages = records.filter (message) ->
+			return not RocketChat.isApprovalRequired rid, viewerId, message._id
+
+		messages = _.map messages, (message) ->
+			message.starred = _.findWhere message.starred, { _id: viewerId }
 			return message
 
 		return {
+			more: more
 			messages: messages
 		}

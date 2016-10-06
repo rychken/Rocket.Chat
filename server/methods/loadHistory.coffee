@@ -9,12 +9,12 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'error-invalid-user', 'Invalid user', { method: 'loadHistory' }
 
-		fromId = Meteor.userId()
-		room = Meteor.call 'canAccessRoom', rid, fromId
+		viewerId = Meteor.userId()
+		room = Meteor.call 'canAccessRoom', rid, viewerId
 		unless room
 			return false
 
-		if room.t is 'c' and not RocketChat.authz.hasPermission(fromId, 'preview-c-room') and room.usernames.indexOf(room.username) is -1
+		if room.t is 'c' and not RocketChat.authz.hasPermission(viewerId, 'preview-c-room') and room.usernames.indexOf(room.username) is -1
 			return false
 
 		options =
@@ -30,12 +30,14 @@ Meteor.methods
 		else
 			records = RocketChat.models.Messages.findVisibleByRoomId(rid, options).fetch()
 
-		messages = _.map records, (message) ->
-			message.starred = _.findWhere message.starred, { _id: fromId }
+		more = records.length is options.limit
+
+		messages = records.filter (message) ->
+			return not RocketChat.isApprovalRequired rid, viewerId, message._id
+
+		messages = _.map messages, (message) ->
+			message.starred = _.findWhere message.starred, { _id: viewerId }
 			return message
-		
-		messages = messages.filter (message) ->
-			return not RocketChat.isApprovalRequired rid, fromId, message._id
 
 		unreadNotLoaded = 0
 
@@ -48,6 +50,7 @@ Meteor.methods
 				unreadNotLoaded = unreadMessages.count()
 
 		return {
+			more: more
 			messages: messages
 			firstUnread: firstUnread
 			unreadNotLoaded: unreadNotLoaded

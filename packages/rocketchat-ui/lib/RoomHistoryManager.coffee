@@ -66,8 +66,7 @@
 			room.loaded ?= 0
 			if result?.messages?.length?
 				room.loaded += result.messages.length
-			if result?.messages?.length < limit
-				room.hasMore.set false
+			room.hasMore.set result?.more
 
 	getMoreNext = (rid, limit=defaultLimit) ->
 		room = getRoom rid
@@ -107,8 +106,7 @@
 				room.loaded ?= 0
 				if result.messages.length?
 					room.loaded += result.messages.length
-				if result.messages.length < limit
-					room.hasMoreNext.set false
+				room.hasMoreNext.set result?.more
 
 	getSurroundingMessages = (message, limit=defaultLimit) ->
 		unless message?.rid
