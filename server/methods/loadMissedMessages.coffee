@@ -7,8 +7,8 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'error-invalid-user', 'Invalid user', { method: 'loadMissedMessages' }
 
-		fromId = Meteor.userId()
-		unless Meteor.call 'canAccessRoom', rid, fromId
+		viewerId = Meteor.userId()
+		unless Meteor.call 'canAccessRoom', rid, viewerId
 			return false
 
 		options =
@@ -18,7 +18,9 @@ Meteor.methods
 		if not RocketChat.settings.get 'Message_ShowEditedStatus'
 			options.fields = { 'editedAt': 0 }
 
-		if !RocketChat.isApprovalRequired(rid) or RocketChat.authz.hasPermission(fromId, 'message-approval', rid)
-			return RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, start, options).fetch()
-		else
-			return RocketChat.models.Messages.findVisibleAcceptedByRoomIdAfterTimestamp(rid, start, options).fetch()
+		records = RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(rid, start, options).fetch()
+
+		messages = records.filter (message) ->
+			return not RocketChat.isApprovalRequired rid, viewerId, message._id
+
+		return messages
