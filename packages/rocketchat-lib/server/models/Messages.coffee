@@ -84,19 +84,6 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		return @find query, options
 
-	findVisibleCreatedOrEditedAfterTimestamp: (timestamp, options) ->
-		query =
-			_hidden: { $ne: true }
-			$or: [
-				ts:
-					$gt: timestamp
-			,
-				'editedAt':
-					$gt: timestamp
-			]
-
-		return @find query, options
-
 	findStarredByUserAtRoom: (userId, roomId, options) ->
 		query =
 			_hidden: { $ne: true }
@@ -141,6 +128,67 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 		delete record._id
 		return @insert record
 	
+	findVisibleAcceptedByRoomId: (roomId, viewerId, options) ->
+		query =
+			_hidden:
+				$ne: true
+			rid: roomId
+			$or: [
+				{ needsApproval: { $ne: true } }
+				,
+				'u._id': viewerId
+			]
+
+		return @find query, options
+
+	findVisibleAcceptedByRoomIdBeforeTimestamp: (roomId, viewerId, timestamp, options) ->
+		query =
+			_hidden:
+				$ne: true
+			rid: roomId
+			ts:
+				$lt: timestamp
+			$or: [
+				{ needsApproval: { $ne: true } }
+				,
+				'u._id': viewerId
+			]
+
+		console.log query
+
+		return @find query, options
+
+	findVisibleAcceptedByRoomIdAfterTimestamp: (roomId, viewerId, timestamp, options) ->
+		query =
+			_hidden:
+				$ne: true
+			rid: roomId
+			ts:
+				$gt: timestamp
+			$or: [
+				{ needsApproval: { $ne: true } }
+				,
+				'u._id': viewerId
+			]
+
+		return @find query, options
+
+	findVisibleAcceptedByRoomIdBetweenTimestamps: (roomId, viewerId, afterTimestamp, beforeTimestamp, options) ->
+		query =
+			_hidden:
+				$ne: true
+			rid: roomId
+			ts:
+				$gt: afterTimestamp
+				$lt: beforeTimestamp
+			$or: [
+				{ needsApproval: { $ne: true } }
+				,
+				'u._id': viewerId
+			]
+
+		return @find query, options
+
 	# UPDATE
 	setHiddenById: (_id, hidden=true) ->
 		query =

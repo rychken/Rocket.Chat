@@ -86,6 +86,7 @@ Package.onUse(function(api) {
 
 	// SERVER LIB
 	api.addFiles('server/lib/defaultBlockedDomainsList.js', 'server');
+	api.addFiles('server/lib/loadMessages.coffee', 'server');
 	api.addFiles('server/lib/notifyUsersOnMessage.js', 'server');
 	api.addFiles('server/lib/roomTypes.coffee', 'server');
 	api.addFiles('server/lib/sendEmailOnMessage.js', 'server');

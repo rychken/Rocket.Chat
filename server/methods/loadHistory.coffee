@@ -9,46 +9,48 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'error-invalid-user', 'Invalid user', { method: 'loadHistory' }
 
-		viewerId = Meteor.userId()
-		room = Meteor.call 'canAccessRoom', rid, viewerId
-		unless room
-			return false
-
-		if room.t is 'c' and not RocketChat.authz.hasPermission(viewerId, 'preview-c-room') and room.usernames.indexOf(room.username) is -1
-			return false
+		# Rest of verification is in RocketChat.loadMessages
 
 		options =
 			sort:
 				ts: -1
 			limit: limit
 
-		if not RocketChat.settings.get 'Message_ShowEditedStatus'
-			options.fields = { 'editedAt': 0 }
+		direction = if end then 'before' else 'both'
 
-		if end?
-			records = RocketChat.models.Messages.findVisibleByRoomIdBeforeTimestamp(rid, end, options).fetch()
-		else
-			records = RocketChat.models.Messages.findVisibleByRoomId(rid, options).fetch()
+		[messages, more] = RocketChat.loadMessages(rid, end, direction, options)
 
-		more = records.length is options.limit
-
-		messages = records.filter (message) ->
-			return not RocketChat.isApprovalRequired rid, viewerId, message._id
-
-		messages = _.map messages, (message) ->
-			message.starred = _.findWhere message.starred, { _id: viewerId }
-			return message
+		if messages is false
+			return false
 
 		unreadNotLoaded = 0
 
 		if ls?
 			firstMessage = messages[messages.length - 1]
+			
 			if firstMessage?.ts > ls
-				delete options.limit
-				unreadMessages = RocketChat.models.Messages.findVisibleByRoomIdBetweenTimestamps(rid, ls, firstMessage.ts, { limit: 1, sort: { ts: 1 } })
-				firstUnread = unreadMessages.fetch()[0]
-				unreadNotLoaded = unreadMessages.count()
 
+				options =
+					sort:
+						ts: 1
+					limit: 1
+
+				viewerId = Meteor.userId()
+
+				if not RocketChat.isApprovalRequired rid, viewerId
+					unreadMessages = RocketChat.models.Messages.findVisibleByRoomIdBetweenTimestamps(
+						rid, ls, firstMessage.ts, options)
+				else
+					unreadMessages = RocketChat.models.Messages.findVisibleAcceptedByRoomIdBetweenTimestamps(
+						rid, viewerId, ls, firstMessage.ts, options)
+
+				# Either case finds at least one message since we use
+				# firstMessage.ts and have access to it
+				firstUnread = unreadMessages.fetch()[0]
+
+				# Gets full count despite limit
+				unreadNotLoaded = unreadMessages.count()
+	
 		return {
 			more: more
 			messages: messages

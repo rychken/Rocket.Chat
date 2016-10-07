@@ -7,8 +7,6 @@ Meteor.methods
 		if not Meteor.userId()
 			throw new Meteor.Error 'error-invalid-user', 'Invalid user', { method: 'loadSurroundingMessages' }
 
-		viewerId = Meteor.userId()
-
 		unless message._id
 			return false
 
@@ -17,8 +15,7 @@ Meteor.methods
 		unless message?.rid
 			return false
 
-		unless Meteor.call 'canAccessRoom', message.rid, viewerId
-			return false
+		# Rest of verification is in RocketChat.loadMessages
 
 		limit = limit - 1
 
@@ -27,34 +24,23 @@ Meteor.methods
 				ts: -1
 			limit: Math.ceil(limit/2)
 
-		if not RocketChat.settings.get 'Message_ShowEditedStatus'
-			options.fields = { 'editedAt': 0 }
-
-		records = RocketChat.models.Messages.findVisibleByRoomIdBeforeTimestamp(message.rid, message.ts, options).fetch()
-
-		moreBefore = records.length is options.limit
-
-		messages = _.map records, (message) ->
-			message.starred = _.findWhere message.starred, { _id: viewerId }
-			return message
-
-		messages.push message
+		[beforeMessages, moreBefore] = RocketChat.loadMessages(message.rid, message.ts, 'before', options)
+		
+		if beforeMessages is false
+			return false
 
 		options.sort = { ts: 1 }
 		options.limit = Math.floor(limit/2)
 
-		records = RocketChat.models.Messages.findVisibleByRoomIdAfterTimestamp(message.rid, message.ts, options).fetch()
-
-		moreAfter = records.length is options.limit
+		[afterMessages, moreAfter] = RocketChat.loadMessages(message.rid, message.ts, 'after', options)
 		
-		afterMessages = _.map records, (message) ->
-			message.starred = _.findWhere message.starred, { _id: viewerId }
-			return message
+		if afterMessages is false
+			return false
 
-		messages = messages.concat afterMessages
-
-		messages = messages.filter (message) ->
-			return not RocketChat.isApprovalRequired message.rid, viewerId, message._id
+		messages = beforeMessages.concat message, afterMessages
+		
+		if messages is false
+			return false
 
 		return {
 			messages: messages
